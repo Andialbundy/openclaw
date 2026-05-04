@@ -20,6 +20,7 @@ export class ChatLog extends Container {
       createdAt: number;
     }
   >();
+  private pendingSystemNotices = new Map<string, Container>();
   private btwMessage: BtwInlineMessage | null = null;
   private toolsExpanded = false;
 
@@ -42,6 +43,11 @@ export class ChatLog extends Container {
     for (const [runId, entry] of this.pendingUsers.entries()) {
       if (entry.component === component) {
         this.pendingUsers.delete(runId);
+      }
+    }
+    for (const [runId, entry] of this.pendingSystemNotices.entries()) {
+      if (entry === component) {
+        this.pendingSystemNotices.delete(runId);
       }
     }
     if (this.btwMessage === component) {
@@ -69,6 +75,7 @@ export class ChatLog extends Container {
     this.clear();
     this.toolById.clear();
     this.streamingRuns.clear();
+    this.pendingSystemNotices.clear();
     this.btwMessage = null;
     if (!opts?.preservePendingUsers) {
       this.pendingUsers.clear();
@@ -100,6 +107,29 @@ export class ChatLog extends Container {
 
   addSystem(text: string) {
     this.append(this.createSystemMessage(text));
+  }
+
+  // Tag a system notice with a runId so a later chat event for the same run
+  // can dismiss it. Used by the streaming watchdog so the "taking longer than
+  // expected" notice goes away if the response actually arrives afterwards.
+  addPendingSystem(runId: string, text: string) {
+    const existing = this.pendingSystemNotices.get(runId);
+    if (existing) {
+      this.removeChild(existing);
+    }
+    const entry = this.createSystemMessage(text);
+    this.pendingSystemNotices.set(runId, entry);
+    this.append(entry);
+  }
+
+  dismissPendingSystem(runId: string) {
+    const existing = this.pendingSystemNotices.get(runId);
+    if (!existing) {
+      return false;
+    }
+    this.removeChild(existing);
+    this.pendingSystemNotices.delete(runId);
+    return true;
   }
 
   addUser(text: string) {

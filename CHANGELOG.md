@@ -29,6 +29,7 @@ Docs: https://docs.openclaw.ai
 
 ### Fixes
 
+- TUI/streaming watchdog: dismiss the `This response is taking longer than expected` notice as soon as a chat event for the same run arrives, so the message no longer sits next to the recovered response when the run was only briefly silent. Refs #67052, #69081 (closed), prior attempt #69026. Thanks @jpruit20 and @romneyda.
 - GitHub Copilot: drop unsafe native Responses reasoning replay items with non-replayable IDs before dispatch, preventing affected Copilot sessions from failing with `invalid_request_body`. Fixes #83220. Thanks @galiniliev.
 - QA-Lab: make runtime tool coverage fail on missing required tool exercise instead of treating pass/pass parity envelope drift as missing coverage.
 - Core/plugins: harden clawpatch-reported edge cases across gateway auth cleanup, Claude session id paths, plugin activation policy, apply-patch hunk handling, diagnostic redaction, and plugin metadata validation.
