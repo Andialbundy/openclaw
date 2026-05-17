@@ -382,6 +382,29 @@ describe("config schema", () => {
     });
   });
 
+  it("accepts per-agent subagent model timeout config", () => {
+    const config = OpenClawSchema.parse({
+      agents: {
+        list: [
+          {
+            id: "main",
+            subagents: {
+              model: {
+                primary: "openai/gpt-5.5",
+                timeoutMs: 30_000,
+              },
+            },
+          },
+        ],
+      },
+    });
+
+    expect(config.agents?.list?.[0]?.subagents?.model).toEqual({
+      primary: "openai/gpt-5.5",
+      timeoutMs: 30_000,
+    });
+  });
+
   it("accepts exec command highlighting config in global and agent scopes", () => {
     const tools = ToolsSchema.parse({
       exec: {
