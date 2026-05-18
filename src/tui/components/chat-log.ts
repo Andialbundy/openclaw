@@ -109,9 +109,6 @@ export class ChatLog extends Container {
     this.append(this.createSystemMessage(text));
   }
 
-  // Tag a system notice with a runId so a later chat event for the same run
-  // can dismiss it. Used by the streaming watchdog so the "taking longer than
-  // expected" notice goes away if the response actually arrives afterwards.
   addPendingSystem(runId: string, text: string) {
     const existing = this.pendingSystemNotices.get(runId);
     if (existing) {

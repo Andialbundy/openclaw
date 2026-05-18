@@ -393,9 +393,6 @@ export function createEventHandlers(context: EventHandlerContext) {
     if (reconnectPendingRunId === evt.runId) {
       reconnectPendingRunId = null;
     }
-    // Any chat event for a run that previously tripped the streaming watchdog
-    // is proof the response is no longer stuck — drop the stale notice so it
-    // doesn't sit alongside the recovered content.
     chatLog.dismissPendingSystem(evt.runId);
     noteSessionRun(evt.runId);
     if (!state.activeChatRunId && !isLocalBtwRunId?.(evt.runId)) {
