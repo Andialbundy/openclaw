@@ -1,0 +1,53 @@
+name: Generate Branding Assets
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      project:
+        description: 'Project name for cover'
+        default: 'OpenClaw'
+        required: true
+      tags:
+        description: 'Comma-separated tech tags'
+        default: 'Node.js,AI,TypeScript,CLI'
+        required: false
+
+jobs:
+  branding:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout branding repo
+        uses: actions/checkout@v4
+        with:
+          repository: Andialbundy/branding
+          path: branding
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install branding deps
+        run: bun install
+        working-directory: branding
+
+      - name: Generate OG image
+        run: bun generate.ts --format og
+        working-directory: branding
+
+      - name: Generate GitHub cover
+        run: |
+          bun generate.ts --format cover \
+            --project "${{ github.event.inputs.project || 'OpenClaw' }}" \
+            --tags "${{ github.event.inputs.tags || 'Node.js,AI,TypeScript,CLI' }}"
+        working-directory: branding
+
+      - name: Upload branding assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: branding-assets
+          path: branding/out/
+          retention-days: 90
