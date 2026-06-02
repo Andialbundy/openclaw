@@ -5,6 +5,10 @@ on:
     - cron: "0 4 * * *"
   workflow_dispatch:
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   sync:
     runs-on: ubuntu-latest
@@ -19,15 +23,67 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Add upstream remote
-        run: git remote add upstream https://github.com/openclaw/openclaw.git
-
       - name: Fetch upstream
-        run: git fetch upstream main
-
-      - name: Rebase local commits on top of upstream
         run: |
-          git rebase upstream/main || (git rebase --abort && echo "Rebase conflict — manual intervention required" && exit 1)
+          git remote add upstream https://github.com/openclaw/openclaw.git
+          git fetch upstream main
 
-      - name: Push to private repo
-        run: git push origin main --force-with-lease
+      - name: Check divergence
+        id: check
+        run: |
+          BEHIND=$(git rev-list HEAD..upstream/main --count)
+          AHEAD=$(git rev-list upstream/main..HEAD --count)
+          echo "behind=$BEHIND" >> "$GITHUB_OUTPUT"
+          echo "ahead=$AHEAD" >> "$GITHUB_OUTPUT"
+          echo "Upstream: $BEHIND ahead, fork: $AHEAD ahead"
+
+      - name: Create or reset sync branch
+        if: steps.check.outputs.behind != '0'
+        run: |
+          git checkout -B sync/upstream upstream/main
+
+      - name: Cherry-pick fork-only commits
+        if: steps.check.outputs.behind != '0'
+        id: cherrypick
+        run: |
+          # Replay commits that are in fork/main but not in upstream
+          COMMITS=$(git log --reverse --format="%H" upstream/main..origin/main)
+          if [ -z "$COMMITS" ]; then
+            echo "No fork-specific commits to replay"
+            exit 0
+          fi
+          for SHA in $COMMITS; do
+            git cherry-pick "$SHA" || {
+              git cherry-pick --abort
+              echo "CONFLICT_SHA=$SHA" >> "$GITHUB_ENV"
+              echo "failed=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            }
+          done
+
+      - name: Push sync branch
+        if: steps.check.outputs.behind != '0' && steps.cherrypick.outputs.failed != 'true'
+        run: git push origin sync/upstream --force-with-lease
+
+      - name: Open or update PR
+        if: steps.check.outputs.behind != '0' && steps.cherrypick.outputs.failed != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BEHIND=${{ steps.check.outputs.behind }}
+          EXISTING=$(gh pr list --head sync/upstream --state open --json number --jq '.[0].number // empty')
+          if [ -z "$EXISTING" ]; then
+            gh pr create \
+              --title "chore: sync $BEHIND upstream commits" \
+              --body "Automated sync from \`openclaw/openclaw\` — $BEHIND new commits rebased on top of fork-specific changes." \
+              --base main \
+              --head sync/upstream
+          else
+            echo "PR #$EXISTING already open — branch updated"
+          fi
+
+      - name: Report conflict
+        if: steps.check.outputs.behind != '0' && steps.cherrypick.outputs.failed == 'true'
+        run: |
+          echo "::error::Cherry-pick conflict at $CONFLICT_SHA — manual sync required"
+          exit 1
