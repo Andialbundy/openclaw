@@ -33,6 +33,7 @@ import type {
 } from "./agent-bundle-mcp-types.js";
 import { loadEmbeddedAgentMcpConfig } from "./embedded-agent-mcp.js";
 import { isMcpConfigRecord } from "./mcp-config-shared.js";
+import { checkMcpCommandForMalware } from "./mcp-osv-check.js";
 import { resolveMcpTransport } from "./mcp-transport.js";
 
 type BundleMcpSession = {
@@ -624,6 +625,11 @@ export function createSessionMcpRuntime(params: {
           try {
             failIfDisposed();
             if (!connected) {
+              if (resolved.transportType === "stdio" && isMcpConfigRecord(rawServer)) {
+                const cmd = typeof rawServer.command === "string" ? rawServer.command : "";
+                const args = Array.isArray(rawServer.args) ? (rawServer.args as string[]) : [];
+                await checkMcpCommandForMalware(cmd, args);
+              }
               await connectWithTimeout(
                 session.client,
                 session.transport,
