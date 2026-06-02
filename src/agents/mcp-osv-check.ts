@@ -18,7 +18,7 @@ function inferEcosystem(command: string): "npm" | "PyPI" | null {
 function parseNpmPackage(token: string): { name: string; version?: string } {
   if (token.startsWith("@")) {
     const m = /^(@[^/]+\/[^@]+)(?:@(.+))?$/.exec(token);
-    return m ? { name: m[1]!, version: m[2] ?? undefined } : { name: token };
+    return m ? { name: m[1], version: m[2] ?? undefined } : { name: token };
   }
   const at = token.lastIndexOf("@");
   if (at > 0) {
@@ -30,7 +30,7 @@ function parseNpmPackage(token: string): { name: string; version?: string } {
 
 function parsePypiPackage(token: string): { name: string; version?: string } {
   const m = /^([a-zA-Z0-9._-]+)(?:\[[^\]]*\])?(?:==(.+))?$/.exec(token);
-  return m ? { name: m[1]!, version: m[2] ?? undefined } : { name: token };
+  return m ? { name: m[1], version: m[2] ?? undefined } : { name: token };
 }
 
 function parsePackage(
@@ -57,7 +57,9 @@ async function queryOsv(
     signal: AbortSignal.timeout(OSV_TIMEOUT_MS),
   });
 
-  if (!resp.ok) throw new Error(`OSV API ${resp.status}`);
+  if (!resp.ok) {
+    throw new Error(`OSV API ${resp.status}`);
+  }
   const data = (await resp.json()) as { vulns?: OsvVuln[] };
   return (data.vulns ?? []).filter((v) => v.id.startsWith("MAL-"));
 }
@@ -71,10 +73,14 @@ export async function checkMcpCommandForMalware(
   args: readonly string[],
 ): Promise<void> {
   const ecosystem = inferEcosystem(command);
-  if (!ecosystem) return;
+  if (!ecosystem) {
+    return;
+  }
 
   const pkg = parsePackage(args, ecosystem);
-  if (!pkg) return;
+  if (!pkg) {
+    return;
+  }
 
   let malware: OsvVuln[];
   try {
