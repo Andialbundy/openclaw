@@ -508,6 +508,11 @@ async function inspectEstablishedGatewayClients(params: {
   };
 }
 
+async function countDirItems(dir: string): Promise<number> {
+  const items = await fs.readdir(dir).catch(() => []);
+  return items.filter((i) => !i.startsWith(".")).length;
+}
+
 function hasActiveGatewayExecProbeCredential(params: {
   cfg: OpenClawConfig;
   env: NodeJS.ProcessEnv;
