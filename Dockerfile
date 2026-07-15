@@ -6,7 +6,7 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
 
 RUN corepack enable pnpm && \
-    pnpm install --prod --no-frozen-lockfile
+    pnpm install --prod --no-frozen-lockfile --registry https://registry.npmjs.org
 
 # Runtime stage
 FROM node:24-alpine
