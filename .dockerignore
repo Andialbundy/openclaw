@@ -53,6 +53,8 @@ openclaw-path-alias-*
 # build artifacts
 dist
 **/dist
+# Exception: Include root dist/ for runtime Docker builds (pre-built dist/)
+!dist
 apps/macos/.build
 apps/ios/build
 **/*.trace
