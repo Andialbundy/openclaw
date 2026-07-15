@@ -1,16 +1,28 @@
+# Stage 1: Builder
+FROM node:24 AS builder
+
+WORKDIR /build
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY patches ./patches
+
+RUN corepack enable pnpm && pnpm install --frozen-lockfile
+
+COPY . .
+RUN pnpm build
+
+# Stage 2: Runtime
 FROM node:24-alpine
 
 WORKDIR /app
 
-# Install dependencies
-COPY package.json pnpm-lock.yaml ./
-RUN corepack enable pnpm && pnpm install --frozen-lockfile
+# Copy built artifacts from builder
+COPY --from=builder /build/dist ./dist
+COPY --from=builder /build/openclaw.mjs ./
+COPY --from=builder /build/package.json ./
 
-# Copy source
-COPY . .
-
-# Build TypeScript
-RUN pnpm build
+# Install runtime dependencies only (production)
+RUN corepack enable pnpm && pnpm install --prod --frozen-lockfile
 
 # Create non-root user
 RUN addgroup -g 1000 openclaw && adduser -D -u 1000 -G openclaw openclaw
