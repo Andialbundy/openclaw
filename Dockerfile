@@ -1,31 +1,25 @@
-# Stage 1: Builder
-FROM node:24 AS builder
+# Builder stage (assumes dist/ is already built on laptop)
+FROM node:24-alpine AS builder
 
-WORKDIR /build
+WORKDIR /app
 
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY patches ./patches
+COPY package.json pnpm-lock.yaml ./
 
-RUN corepack enable pnpm && pnpm install --frozen-lockfile
+RUN corepack enable pnpm && \
+    pnpm install --prod --no-frozen-lockfile
 
-COPY . .
-RUN pnpm build
-
-# Stage 2: Runtime
+# Runtime stage
 FROM node:24-alpine
 
 WORKDIR /app
 
-# Copy built artifacts from builder
-COPY --from=builder /build/dist ./dist
-COPY --from=builder /build/openclaw.mjs ./
-COPY --from=builder /build/package.json ./
-
-# Install runtime dependencies only (production)
-RUN corepack enable pnpm && pnpm install --prod --frozen-lockfile
+COPY dist ./dist
+COPY openclaw.mjs ./
+COPY package.json ./
+COPY --from=builder /app/node_modules ./node_modules
 
 # Create non-root user
-RUN addgroup -g 1000 openclaw && adduser -D -u 1000 -G openclaw openclaw
+RUN addgroup -g 1001 openclaw && adduser -D -u 1001 -G openclaw openclaw
 USER openclaw
 
 # Health check
