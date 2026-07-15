@@ -18,8 +18,8 @@ USER openclaw
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000/health', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"
+  CMD node -e "fetch('http://127.0.0.1:18789/healthz').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 
-EXPOSE 3000
+EXPOSE 18789
 
-CMD ["pnpm", "start"]
+CMD ["node", "dist/index.js", "gateway", "--bind", "0.0.0.0", "--port", "18789"]

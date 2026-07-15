@@ -88,13 +88,13 @@ jobs:
           # Health check
           echo "Running health checks..."
           for i in {1..30}; do
-            if ssh root@"${HOMELAB_HOST}" "pct exec ${HOMELAB_CONTAINER} -- docker exec openclaw curl -sf http://localhost:3000/health >/dev/null 2>&1"; then
+            if ssh root@"${HOMELAB_HOST}" "pct exec ${HOMELAB_CONTAINER} -- docker exec openclaw-gateway curl -sf http://localhost:18789/healthz >/dev/null 2>&1"; then
               echo "✓ Health check PASSED"
               break
             fi
             if [ $i -eq 30 ]; then
               echo "✗ Health check FAILED"
-              ssh root@"${HOMELAB_HOST}" "pct exec ${HOMELAB_CONTAINER} -- docker logs openclaw" | tail -20
+              ssh root@"${HOMELAB_HOST}" "pct exec ${HOMELAB_CONTAINER} -- docker logs openclaw-gateway" | tail -20
               exit 1
             fi
             sleep 2
