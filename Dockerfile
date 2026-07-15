@@ -1,11 +1,13 @@
 # Build stage
-FROM node:24-alpine AS builder
+FROM node:24 AS builder
 WORKDIR /app
-COPY package.json pnpm-lock.yaml ./
-RUN corepack enable pnpm && pnpm install --prefer-offline
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY scripts ./scripts
+COPY patches ./patches
+RUN corepack enable pnpm && pnpm install
 
 # Runtime stage
-FROM node:24-alpine
+FROM node:24
 WORKDIR /app
 COPY package.json ./
 COPY dist ./dist
@@ -13,7 +15,7 @@ COPY openclaw.mjs ./
 COPY --from=builder /app/node_modules ./node_modules
 
 # Create non-root user
-RUN addgroup -g 1001 openclaw && adduser -D -u 1001 -G openclaw openclaw
+RUN groupadd -g 1001 openclaw && useradd -u 1001 -g openclaw openclaw
 USER openclaw
 
 # Health check
