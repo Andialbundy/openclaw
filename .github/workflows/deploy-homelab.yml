@@ -19,6 +19,8 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-24.04
     timeout-minutes: 60
+    env:
+      IMAGE_NAME_LOWER: andialbundy/openclaw
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -53,8 +55,8 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
-          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LOWER }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LOWER }}:buildcache,mode=max
 
       - name: Deploy to Homelab
         env:
