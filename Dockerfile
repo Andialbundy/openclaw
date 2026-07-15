@@ -1,21 +1,15 @@
-# Builder stage (assumes dist/ is already built on laptop)
+# Build stage
 FROM node:24-alpine AS builder
-
 WORKDIR /app
-
 COPY package.json pnpm-lock.yaml ./
-
-RUN corepack enable pnpm && \
-    pnpm install --prod --no-frozen-lockfile --registry https://registry.npmjs.org
+RUN corepack enable pnpm && pnpm install --prefer-offline
 
 # Runtime stage
 FROM node:24-alpine
-
 WORKDIR /app
-
+COPY package.json ./
 COPY dist ./dist
 COPY openclaw.mjs ./
-COPY package.json ./
 COPY --from=builder /app/node_modules ./node_modules
 
 # Create non-root user

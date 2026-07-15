@@ -31,6 +31,8 @@ __openclaw_vitest__
 *.mp3
 node_modules
 **/node_modules
+# Exception: Include root node_modules/ for Docker runtime (pre-built deps)
+!node_modules
 .pnpm-store
 **/.pnpm-store
 .turbo
