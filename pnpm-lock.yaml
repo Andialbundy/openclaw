@@ -34,9 +34,6 @@ overrides:
 
 packageExtensionsChecksum: sha256-zZ8fyodhMTumshonC7kktCqTPsiHL3UAyS9vltFAlMo=
 
-patchedDependencies:
-  '@agentclientprotocol/claude-agent-acp@0.39.0': 8ce79a079ca223290aeaa8d61063853d8e021ce5d35690f28ac998dbca9bcb4b
-
 importers:
 
   .:
@@ -309,7 +306,7 @@ importers:
     dependencies:
       '@agentclientprotocol/claude-agent-acp':
         specifier: 0.39.0
-        version: 0.39.0(patch_hash=8ce79a079ca223290aeaa8d61063853d8e021ce5d35690f28ac998dbca9bcb4b)(@anthropic-ai/sdk@0.100.1(zod@4.4.3))(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))
+        version: 0.39.0(@anthropic-ai/sdk@0.100.1(zod@4.4.3))(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))
       '@zed-industries/codex-acp':
         specifier: 0.15.0
         version: 0.15.0
@@ -7724,7 +7721,7 @@ snapshots:
       zod: 3.25.76
       zod-to-json-schema: 3.25.2(zod@3.25.76)
 
-  '@agentclientprotocol/claude-agent-acp@0.39.0(patch_hash=8ce79a079ca223290aeaa8d61063853d8e021ce5d35690f28ac998dbca9bcb4b)(@anthropic-ai/sdk@0.100.1(zod@4.4.3))(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))':
+  '@agentclientprotocol/claude-agent-acp@0.39.0(@anthropic-ai/sdk@0.100.1(zod@4.4.3))(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))':
     dependencies:
       '@agentclientprotocol/sdk': 0.22.1(zod@4.4.3)
       '@anthropic-ai/claude-agent-sdk': 0.3.156(@anthropic-ai/sdk@0.100.1(zod@4.4.3))(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))(zod@4.4.3)
