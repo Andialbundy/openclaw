@@ -24,4 +24,4 @@ HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
 
 EXPOSE 18789
 
-CMD ["node", "dist/index.js", "gateway", "--bind", "0.0.0.0", "--port", "18789"]
+CMD ["node", "dist/index.js", "gateway", "--bind", "auto", "--port", "18789", "--allow-unconfigured"]
