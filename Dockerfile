@@ -14,9 +14,8 @@ COPY dist ./dist
 COPY openclaw.mjs ./
 COPY --from=builder /app/node_modules ./node_modules
 
-# Create non-root user
+# Create non-root user (not switching for now — volume permission issues)
 RUN groupadd -g 1001 openclaw && useradd -u 1001 -g openclaw openclaw
-USER openclaw
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
