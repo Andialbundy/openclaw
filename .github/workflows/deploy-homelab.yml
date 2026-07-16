@@ -74,62 +74,9 @@ jobs:
           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LOWER }}:buildcache
           cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LOWER }}:buildcache,mode=max
 
-      - name: Deploy to Homelab
-        env:
-          HOMELAB_SSH_KEY: ${{ secrets.HOMELAB_SSH_KEY }}
-          HOMELAB_HOST: ${{ secrets.HOMELAB_HOST || '192.168.178.211' }}
-          HOMELAB_CONTAINER: ${{ secrets.HOMELAB_CONTAINER || '102' }}
-        run: |
-          set -euo pipefail
-
-          # Setup SSH
-          mkdir -p ~/.ssh
-          echo "$HOMELAB_SSH_KEY" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -t ed25519 "$HOMELAB_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
-
-          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
-          echo "Deploying image: $IMAGE"
-
-          # Pull image in container
-          echo "Pulling image in LXC ${HOMELAB_CONTAINER}..."
-          ssh root@"${HOMELAB_HOST}" "pct exec ${HOMELAB_CONTAINER} -- docker pull '${IMAGE}'" || exit 1
-
-          # Update docker-compose
-          echo "Updating docker-compose.yml..."
-          ssh root@"${HOMELAB_HOST}" "pct exec ${HOMELAB_CONTAINER} -- sed -i 's|image: ghcr.io/openclaw/openclaw:.*|image: '${IMAGE}'|g' /opt/services/docker-compose.yml"
-
-          # Restart services
-          echo "Restarting OpenClaw service..."
-          ssh root@"${HOMELAB_HOST}" "pct exec ${HOMELAB_CONTAINER} -- docker-compose -f /opt/services/docker-compose.yml up -d openclaw"
-
-          # Health check
-          echo "Running health checks..."
-          for i in {1..30}; do
-            if ssh root@"${HOMELAB_HOST}" "pct exec ${HOMELAB_CONTAINER} -- docker exec openclaw-gateway curl -sf http://localhost:18789/healthz >/dev/null 2>&1"; then
-              echo "✓ Health check PASSED"
-              break
-            fi
-            if [ $i -eq 30 ]; then
-              echo "✗ Health check FAILED"
-              ssh root@"${HOMELAB_HOST}" "pct exec ${HOMELAB_CONTAINER} -- docker logs openclaw-gateway" | tail -20
-              exit 1
-            fi
-            sleep 2
-          done
-
-          echo "✓ Deployment complete"
-
-      - name: Notify deployment
+      - name: Notify success
         if: success()
         run: |
-          echo "✅ Deployment successful"
-          echo "Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
-          echo "Commit: ${{ github.sha }}"
-          echo "Branch: ${{ github.ref }}"
-
-      - name: Notify failure
-        if: failure()
-        run: |
-          echo "❌ Deployment failed"
-          exit 1
+          echo "✅ Build and push successful"
+          echo "Image pushed to GHCR"
+          echo "Manual deployment: docker pull ghcr.io/andialbundy/openclaw:latest"
