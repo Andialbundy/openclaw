@@ -25,6 +25,9 @@ RUN chown -R openclaw:openclaw /app
 # Make entrypoint executable
 RUN chmod +x /docker-entrypoint.sh
 
+# Run as non-root user
+USER openclaw
+
 # Health check (runs as root, that's fine)
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
   CMD node -e "fetch('http://127.0.0.1:18789/healthz').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
