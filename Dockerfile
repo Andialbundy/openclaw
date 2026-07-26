@@ -13,6 +13,8 @@ WORKDIR /app
 COPY package.json ./
 COPY dist ./dist
 COPY openclaw.mjs ./
+COPY src/agents/templates ./src/agents/templates
+COPY docs/reference/templates ./docs/reference/templates
 COPY --from=builder /app/node_modules ./node_modules
 COPY docker-entrypoint.sh /
 
