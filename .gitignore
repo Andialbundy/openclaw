@@ -112,6 +112,8 @@ USER.md
 .antigravitycli/
 .serena/
 .crabbox/
+.mcp.json
+.projectatlas/
 
 # local QA evidence mirrors; CI publishes canonical Mantis files as Actions artifacts
 mantis/
